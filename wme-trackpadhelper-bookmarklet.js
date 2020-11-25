@@ -1,7 +1,9 @@
-
+// WME TrackpadHelper
+// Minify and add 'javascript: ' to the beginning to make into a bookmarklet
 
 (function () {
   
+  // Toggle between enabled/disabled each run
   if (typeof (W.map.thEnabled) == 'undefined') {
     W.map.thEnabled = false;
     thEnable();
@@ -11,7 +13,6 @@
     } else {
       thEnable();
     }
-
   }
 
   var canvas = document.getElementById('WazeMap');
@@ -28,6 +29,7 @@
     W.map.events.listeners.moveendInitial = W.map.events.listeners.moveend;
 
     canvas.onmousedown = function () {
+      // Preserve moveend listeners and prevent them from running with each mouse movement event
       W.map.events.listeners.moveendPreserved = W.map.events.listeners.moveend;
       W.map.events.listeners.moveend = null;
       console.log('mousedown');
@@ -40,9 +42,10 @@
       document.removeEventListener("mousemove", updatePosition, false);
       W.map.events.listeners.moveend = W.map.events.listeners.moveendPreserved;
       if (W.map.events.listeners.moveend == null) {
-        console.log("moveend restored from initial");
+        // Shouldn't happen, but if the listeners get lost restore them from when the script started
         W.map.events.listeners.moveend = W.map.events.listeners.moveendInitial;
       }
+      // Force the moveend listener to run
       W.map.events.triggerEvent("moveend",null)
       document.exitPointerLock();
     }
@@ -51,7 +54,7 @@
     document.addEventListener('pointerlockchange', lockChangeAlert, false);
     document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
-    console.log('Trackpad Helper enabled.');
+    console.log('WME TrackpadHelper enabled.');
   }
 
   function thDisable() {
@@ -63,20 +66,18 @@
     console.log('Trackpad Helper disabled.');
   }
 
-
-
   function lockChangeAlert() {
     if (document.pointerLockElement === canvas ||
       document.mozPointerLockElement === canvas) {
-      console.log('The pointer lock status is now locked');
       document.addEventListener("mousemove", updatePosition, false);
     } else {
-      console.log('The pointer lock status is now unlocked');
       document.removeEventListener("mousemove", updatePosition, false);
     }
   }
 
   function updatePosition(e) {
+    // Use the keyboard pan functions to move the map the number of pixels from the mouse event.
+    // W.map.DEFAULT_PAN_IN_PIXEL gets temporarly overwritten as there is no way to pass a different value to the pan functions.
     x = e.movementX;
     y = e.movementY;
 
@@ -96,9 +97,11 @@
       } else {
         W.map.panDown();
       }
-
     }
 
+    // TODO: Trigger moveend periodically
+
+    // Set back to original value so that keyboard arrow keys work as expected
     W.map.DEFAULT_PAN_IN_PIXEL = defaultPanInPixel
 
   }
